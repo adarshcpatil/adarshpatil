@@ -21,7 +21,7 @@ class Deauth(object):
         :param self: A Deauth object
         :param data: Shared data from main engine
         :type self: Deauth
-        :type data: dict
+        :type data: tuple
         :return: None
         :rtype: None
         """
@@ -35,8 +35,8 @@ class Deauth(object):
     @staticmethod
     def _craft_packet(sender, receiver, bssid):
         """
-        Craft a deauthentication and a disassociation packet and add
-        them to the list of deauthentication packets
+        Return a list with disassociation packet followed by a
+        deauthentication packet
 
         :param sender: The MAC address of the sender
         :param receiver: The MAC address of the receiver
@@ -64,15 +64,11 @@ class Deauth(object):
         observed_clients.
 
         :param self: A Deauth object
-        :param packet: A scapy.layers.RadioTap object.
+        :param packet: A scapy.layers.RadioTap object
         :type self: Deauth
         :type packet: scapy.layers.RadioTap
         :return: A tuple with channel list followed by packets list
         :rtype: tuple
-        .. note: addr1 = Destination address
-                 addr2 = Sender address
-                 Also this finds devices that are not associated with any
-                 access point as they respond to the access point probes.
         """
 
         channels = list()
@@ -126,8 +122,8 @@ class Deauth(object):
 
     def _add_clients(self, sender, receiver, bssid):
         """
-        Craft and add deauthentication packets based on the sender/receiver
-        to the database
+        Return a tuple containing client followed by packets if the given
+        packet is valid and return None otherwise
 
         :param self: A Deauth object
         :param sender: Address of the sender
@@ -175,7 +171,7 @@ class Deauth(object):
 
     def send_channels(self):
         """
-        Send channes to subscribe.
+        Send channes to subscribe
 
         :param self: A Deauth object
         :type self: Deauth
