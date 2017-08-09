@@ -459,7 +459,7 @@ class TestDeauth(unittest.TestCase):
         # setup the arguments
         sender = constants.WIFI_INVALID
         receiver = "11:11:11:11:11:11"
-        bssid = "22:22:22:22:22:22:22"
+        bssid = receiver
 
         # run the method
         result = self.deauth_obj0._add_clients(sender, receiver, bssid)
@@ -476,7 +476,7 @@ class TestDeauth(unittest.TestCase):
         # setup the arguments
         sender = "11:11:11:11:11:11"
         receiver = constants.WIFI_INVALID
-        bssid = "22:22:22:22:22:22:22"
+        bssid = sender
 
         # run the method
         result = self.deauth_obj0._add_clients(sender, receiver, bssid)

@@ -140,21 +140,15 @@ class Deauth(object):
         # list of addresses that are not acceptable
         non_valid_list = constants.NON_CLIENT_ADDRESSES + self._observed_clients
 
-        # function for passing values
-        pass_fun = lambda s: s
-
-        # check if the sender/receiver is valid
-        is_valid = lambda x: ((x in non_valid_list and pass_fun(False)) or
-                              (x == bssid and pass_fun(True)) or
-                              (pass_fun(False)))
-
         # craft the packets
         packets = lambda: (self._craft_packet(receiver, sender, bssid) +
                            self._craft_packet(sender, receiver, bssid))
 
         # return the client and packets if valid and None otherwise
-        return (is_valid(sender) and (receiver, packets()) or
-                is_valid(receiver) and (sender, packets()) or
+        return (sender not in non_valid_list and
+                receiver not in non_valid_list and
+                (sender == bssid and (receiver, packets()) or
+                 receiver == bssid and (sender, packets())) or
                 None)
 
     def send_output(self):
