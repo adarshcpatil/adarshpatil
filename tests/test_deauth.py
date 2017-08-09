@@ -17,7 +17,7 @@ class TestDeauth(unittest.TestCase):
 
         essid = dot11.Dot11Elt(ID='SSID', info="")
         rates = dot11.Dot11Elt(ID='Rates', info="\x03\x12\x96\x18\x24\x30\x48\x60")
-        dsset = dot11.Dot11Elt(ID='DSset', info='\x01')
+        dsset = dot11.Dot11Elt(ID='DSset', info='\x06')
         self.packet = dot11.RadioTap() / dot11.Dot11() / essid / rates / dsset
 
         custom_tuple = collections.namedtuple("test",
@@ -296,7 +296,7 @@ class TestDeauth(unittest.TestCase):
         message1 = "Failed to return an correct packets"
 
         # check channel
-        self.assertEqual(result[0], ["1"], message0)
+        self.assertEqual(result[0], [self.target_channel], message0)
 
         # check the packets
 
@@ -683,74 +683,30 @@ class TestDeauth(unittest.TestCase):
         self.assertEqual(expected0, actual[0], message)
         self.assertEqual(expected1, actual[1], message)
 
-    def test_send_channels_single_client_proper(self):
+    def test_send_channels_non_frenzy_target_channel(self):
         """
-        Test send_channels method when a client has been already
-        detected. The expected result is the proper channel for
-        that client
+        Test send_channels method when --essid is not given. The
+        expected result is the target AP's channel
         """
-
-        # setup the packet
-        sender0 = "22:22:22:22:22:22"
-        receiver0 = self.target_bssid
-        bssid0 = receiver0
-
-        self.packet.addr1 = receiver0
-        self.packet.addr2 = sender0
-        self.packet.addr3 = bssid0
-
-        # run the method
-        self.deauth_obj0.get_packet(self.packet)
 
         actual = self.deauth_obj0.send_channels()
 
-        message = "Failed to send the proper channel"
+        message = "Failed to send target AP's channel"
 
         expected = self.target_channel
 
-        self.assertEqual(expected, actual[0], message)
+        self.assertEqual(expected, actual, message)
 
-    def test_send_channels_multiple_clients_proper(self):
+    def test_send_channels_frenzy_all_channels(self):
         """
-        Test send_channels method when multiple clients has been already
-        detected. The expected result is the proper channels for
-        all the clients
+        Test send_channels method when --essid is given. The expected
+        result is all channels
         """
-
-        # setup the packet
-        sender0 = "22:22:22:22:22:22"
-        receiver0 = "44:44:44:44:44:44"
-        bssid0 = receiver0
-
-        sender1 = "66:66:66:66:66:66"
-        receiver1 = "33:33:33:33:33:33"
-        bssid1 = sender1
-
-        # setup packet 0
-        essid = dot11.Dot11Elt(ID='SSID', info="")
-        rates = dot11.Dot11Elt(ID='Rates', info="\x03\x12\x96\x18\x24\x30\x48\x60")
-        dsset = dot11.Dot11Elt(ID='DSset', info='\x01')
-        packet0 = dot11.RadioTap() / dot11.Dot11() / essid / rates / dsset
-        packet0.addr1 = receiver0
-        packet0.addr2 = sender0
-        packet0.addr3 = bssid0
-
-        # setup packet 1
-        dsset = dot11.Dot11Elt(ID='DSset', info='\x05')
-        packet1 = dot11.RadioTap() / dot11.Dot11() / essid / rates / dsset
-        packet1.addr1 = receiver1
-        packet1.addr2 = sender1
-        packet1.addr3 = bssid1
-
-        # run the method
-        self.deauth_obj1.get_packet(packet0)
-
-        self.deauth_obj1.get_packet(packet1)
 
         actual = self.deauth_obj1.send_channels()
 
-        message = "Failed to send the proper channel"
+        message = "Failed to send all the channels"
 
-        expected = ["1", "5"]
+        expected = range(1, 14)
 
         self.assertEqual(expected, actual, message)

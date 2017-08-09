@@ -29,7 +29,6 @@ class Deauth(object):
         self._observed_clients = list()
         self._should_continue = True
         self._data = data
-        self._channels = list()
         self._first_run = True
 
     @staticmethod
@@ -86,7 +85,6 @@ class Deauth(object):
 
             bssid = self._data.target_ap_bssid
             channels.append(self._data.target_ap_channel)
-            self._channels.append(self._data.target_ap_channel)
         else:
             bssid = packet.addr3
 
@@ -104,7 +102,6 @@ class Deauth(object):
                     return ([], [])
 
                 channels.append(str(channel))
-                self._channels.append(str(channel))
             except (TypeError, IndexError):
                 # just return empty channel and packet
                 return ([], [])
@@ -141,14 +138,16 @@ class Deauth(object):
         non_valid_list = constants.NON_CLIENT_ADDRESSES + self._observed_clients
 
         # craft the packets
-        packets = lambda: (self._craft_packet(receiver, sender, bssid) +
-                           self._craft_packet(sender, receiver, bssid))
+        packets = (self._craft_packet(receiver, sender, bssid) +
+                   self._craft_packet(sender, receiver, bssid))
 
         # return the client and packets if valid and None otherwise
+        # it uses short circuiting to improve performance
+        # logical value: A.B(!C.D ^ C.!D) ^ False(None)
         return (sender not in non_valid_list and
                 receiver not in non_valid_list and
-                (sender == bssid and (receiver, packets()) or
-                 receiver == bssid and (sender, packets())) or
+                (sender == bssid and (receiver, packets) or
+                 receiver == bssid and (sender, packets)) or
                 None)
 
     def send_output(self):
@@ -161,7 +160,7 @@ class Deauth(object):
         :rtype: list
         """
 
-        return map(lambda client: "DEAUTH/DISAS - {}".format(client), self._observed_clients)
+        return map("DEAUTH/DISAS - {}".format, self._observed_clients)
 
     def send_channels(self):
         """
@@ -173,10 +172,6 @@ class Deauth(object):
         :rtype: list
         """
 
-        channels_to_send = list()
-
-        if self._channels:
-            channels_to_send = self._channels
-            self._channels = list()
-
-        return channels_to_send
+        # return target's channel if available otherwise all channels
+        return (self._data.target_ap_channel if self._data.target_ap_bssid else
+                constants.ALL_2G_CHANNELS)
