@@ -181,4 +181,4 @@ class Deauth(object):
 
         # return target's channel if available otherwise all channels
         return (self._data.target_ap_channel if self._data.target_ap_bssid else
-                constants.ALL_2G_CHANNELS)
+                [str(ch) for ch in constants.ALL_2G_CHANNELS])
