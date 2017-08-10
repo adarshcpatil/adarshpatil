@@ -86,7 +86,10 @@ class Deauth(object):
             bssid = self._data.target_ap_bssid
             channels.append(self._data.target_ap_channel)
         else:
-            bssid = packet.addr3
+            try:
+                bssid = packet.addr3
+            except AttributeError:
+                return ([], [])
 
             # Do not send deauth for our rogue access point
             if bssid == self._data.rogue_ap_mac:
@@ -107,8 +110,12 @@ class Deauth(object):
                 return ([], [])
 
         # extract sender and receiver and check if it's a client
-        receiver = packet.addr1
-        sender = packet.addr2
+        try:
+            receiver = packet.addr1
+            sender = packet.addr2
+        except AttributeError:
+            return ([], [])
+
         clients = self._add_clients(sender, receiver, bssid)
 
         if clients:
