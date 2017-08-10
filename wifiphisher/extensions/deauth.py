@@ -57,6 +57,20 @@ class Deauth(object):
 
         return [disassoc_packet, deauth_packet]
 
+    @staticmethod
+    def _extract_bssid(packet):
+        ds_value = packet.FCfield & 3
+        to_ds = ds_value & 0x1 != 0
+        from_ds = ds_value & 0x2 != 0
+        # station to ap
+        if to_ds == 1 and from_ds == 0:
+            return packet.addr1
+        # ap to station
+        elif to_ds == 0 and from_ds == 1:
+            return packet.addr2
+        elif to_ds == 0 and from_ds == 0:
+            return packet.addr3
+
     def get_packet(self, packet):
         """
         Process the Dot11 packets and add any desired clients to
@@ -73,6 +87,17 @@ class Deauth(object):
         channels = list()
         packets_to_send = list()
 
+        # basic malform frame check
+        try:
+            # Discard WDS frame
+            ds_value = packet.FCfield & 3
+            if ds_value == 3:
+                return ([], [])
+            receiver = packet.addr1
+            sender = packet.addr2
+        except AttributeError:
+            return ([], [])
+
         # when --essid is used we don't have target_ap_bssid
         if self._data.target_ap_bssid:
             # we need to create this packet only once
@@ -86,10 +111,7 @@ class Deauth(object):
             bssid = self._data.target_ap_bssid
             channels.append(self._data.target_ap_channel)
         else:
-            try:
-                bssid = packet.addr3
-            except AttributeError:
-                return ([], [])
+            bssid = self._extract_bssid(packet)
 
             # Do not send deauth for our rogue access point
             if bssid == self._data.rogue_ap_mac:
@@ -108,13 +130,6 @@ class Deauth(object):
             except (TypeError, IndexError):
                 # just return empty channel and packet
                 return ([], [])
-
-        # extract sender and receiver and check if it's a client
-        try:
-            receiver = packet.addr1
-            sender = packet.addr2
-        except AttributeError:
-            return ([], [])
 
         clients = self._add_clients(sender, receiver, bssid)
 
