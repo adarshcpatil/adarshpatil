@@ -707,6 +707,6 @@ class TestDeauth(unittest.TestCase):
 
         message = "Failed to send all the channels"
 
-        expected = range(1, 14)
+        expected = [str(ch) for ch in range(1, 14)]
 
         self.assertEqual(expected, actual, message)
