@@ -710,3 +710,89 @@ class TestDeauth(unittest.TestCase):
         expected = [str(ch) for ch in range(1, 14)]
 
         self.assertEqual(expected, actual, message)
+
+    def test_extract_bssid_to_ds_1_from_ds_0_addr1(self):
+        """
+        Test _extract_bssid when to_ds is 1 and from_ds is 0.
+        The case should return packet.addr1
+        """
+        # bit0 is to_ds and bit1 is from_ds
+        self.packet.FCfield = 1
+        self.packet.addr1 = "11:11:11:11:11:11"
+        self.packet.addr2 = "22:22:22:22:22:22"
+        self.packet.addr3 = "33:33:33:33:33:33"
+
+        message = "Fail to get correct BSSID as address 1"
+        actual = self.deauth_obj0._extract_bssid(self.packet)
+        expected = self.packet.addr1
+
+        self.assertEqual(expected, actual, message)
+
+    def test_extract_bssid_to_ds_0_from_ds_1_addr2(self):
+        """
+        Test _extract_bssid when to_ds is 1 and from_ds is 0.
+        The case should return packet.addr1
+        """
+        # bit0 is to_ds and bit1 is from_ds
+        self.packet.FCfield = 2
+        self.packet.addr1 = "11:11:11:11:11:11"
+        self.packet.addr2 = "22:22:22:22:22:22"
+        self.packet.addr3 = "33:33:33:33:33:33"
+
+        message = "Fail to get correct BSSID as address 2"
+        actual = self.deauth_obj0._extract_bssid(self.packet)
+        expected = self.packet.addr2
+
+        self.assertEqual(expected, actual, message)
+
+    def test_extract_bssid_to_ds_0_from_ds_0_addr3(self):
+        """
+        Test _extract_bssid when to_ds is 1 and from_ds is 0.
+        The case should return packet.addr1
+        """
+        # bit0 is to_ds and bit1 is from_ds
+        self.packet.FCfield = 0
+        self.packet.addr1 = "11:11:11:11:11:11"
+        self.packet.addr2 = "22:22:22:22:22:22"
+        self.packet.addr3 = "33:33:33:33:33:33"
+
+        message = "Fail to get correct BSSID as address 3"
+        actual = self.deauth_obj0._extract_bssid(self.packet)
+        expected = self.packet.addr3
+
+        self.assertEqual(expected, actual, message)
+
+    def test_get_packet_to_ds_1_from_ds_1_empty(self):
+        """
+        Drop the WDS frame in get_packet
+        """
+
+        message = "Fail to drop the WDS frame"
+        self.packet.FCfield = 3
+        result = self.deauth_obj0.get_packet(self.packet)
+
+        message0 = "Failed to return an correct channel"
+        message1 = "Failed to return an correct packets"
+
+        # check channel
+        self.assertEqual(result[0], [], message0)
+
+        # check the packets
+        self.assertEqual(result[1], [], message1)
+
+    def test_get_packet_address_malform_empty(self):
+        """
+        Drop the frame if the address is malformed
+        """
+
+        packet = mock.Mock(spec=[])
+        result = self.deauth_obj0.get_packet(packet)
+
+        message0 = "Failed to return an correct channel"
+        message1 = "Failed to return an correct packets"
+
+        # check channel
+        self.assertEqual(result[0], [], message0)
+
+        # check the packets
+        self.assertEqual(result[1], [], message1)
